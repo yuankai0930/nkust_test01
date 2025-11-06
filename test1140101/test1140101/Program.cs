@@ -12,10 +12,49 @@ class Program
             // 創建交通照相機服務實例
             var trafficCameraService = new TrafficCameraService();
             
-            // JSON 檔案路徑
-            string jsonFilePath = Path.Combine("data", "A01010000C-000674-011.json");
+            // 取得當前執行檔的目錄
+            string? exeDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            if (exeDirectory == null)
+            {
+                exeDirectory = Directory.GetCurrentDirectory();
+            }
             
-            Console.WriteLine("正在讀取交通照相機資料...");
+            // 構建 JSON 檔案路徑，支援多種可能的位置
+            string[] possiblePaths = {
+                // 1. 當前工作目錄下的 data 資料夾 (適用於 dotnet run)
+                Path.Combine("data", "A01010000C-000674-011.json"),
+                
+                // 2. 執行檔目錄下的 data 資料夾 (適用於 VS Code 偵錯)
+                Path.Combine(exeDirectory, "data", "A01010000C-000674-011.json"),
+                
+                // 3. 從輸出目錄往上找到專案根目錄的 data 資料夾
+                Path.Combine(exeDirectory, "..", "..", "..", "data", "A01010000C-000674-011.json")
+            };
+            
+            string? jsonFilePath = null;
+            foreach (string path in possiblePaths)
+            {
+                if (File.Exists(path))
+                {
+                    jsonFilePath = path;
+                    break;
+                }
+            }
+            
+            if (jsonFilePath == null)
+            {
+                Console.WriteLine("找不到 JSON 檔案，請檢查以下位置：");
+                foreach (string path in possiblePaths)
+                {
+                    Console.WriteLine($"  - {Path.GetFullPath(path)}");
+                }
+                Console.WriteLine($"目前工作目錄: {Directory.GetCurrentDirectory()}");
+                Console.WriteLine($"執行檔目錄: {exeDirectory}");
+                return;
+            }
+            
+            Console.WriteLine($"正在讀取交通照相機資料...");
+            Console.WriteLine($"檔案路徑: {Path.GetFullPath(jsonFilePath)}");
             
             // 從檔案讀取並反序列化 JSON 資料
             ApiResponse? apiResponse = await trafficCameraService.LoadFromFileAsync(jsonFilePath);
