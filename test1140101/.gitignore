@@ -1,5 +1,4 @@
-# Ignore data folder
-data/
+# (data folder will be tracked) -- removed data/ from ignore so project data can be committed
 
 # Visual Studio files
 bin/
